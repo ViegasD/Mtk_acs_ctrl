@@ -1,0 +1,5 @@
+# Configurações do MikroTik
+HOST=192.168.88.1
+USERNAME=admin
+PASSWORD=admin
+PORT=8728
