@@ -1,22 +1,17 @@
-# Dockerfile para uma aplicação Flask com a biblioteca librouteros
+# Use uma imagem base do Python
+FROM python:3.9-slim
 
-# Utiliza a imagem oficial do Python 3.9
-FROM python:3.9
-
-# Define o diretório de trabalho
+# Defina o diretório de trabalho no container
 WORKDIR /app
 
-# Copia os arquivos necessários para a aplicação
-COPY . /app
+# Copie os arquivos da aplicação para o diretório de trabalho
+COPY . .
 
-# Instala as dependências necessárias
-RUN pip install --no-cache-dir flask librouteros
+# Instale as dependências
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Expõe a porta 5000 para o Flask
+# Exponha a porta na qual a aplicação será executada
 EXPOSE 5000
 
-# Define a variável de ambiente para não usar buffer de saída
-ENV PYTHONUNBUFFERED=1
-
-# Comando para rodar a aplicação Flask
-CMD ["python", "app.py"]
+# Comando para iniciar a aplicação
+CMD ["python", "liberaçãomikrotik.py"]
