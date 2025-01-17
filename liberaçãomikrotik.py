@@ -29,39 +29,23 @@ def payment_notification():
         print("Dados recebidos:", data)
 
         # Extração dos dados importantes
-        payment_id = data.get('id')  # ID do pagamento
-        status = data.get('status')  # Status do pagamento
-        external_reference = data.get('external_reference')  # Referência externa contendo múltiplas variáveis
+        notification_id = data.get("id")  # ID da notificação
+        live_mode = data.get("live_mode")  # Ambiente (produção ou sandbox)
+        notification_type = data.get("type")  # Tipo da notificação
+        action = data.get("action")  # Ação realizada
+        data_object = data.get("data", {})  # Objeto data
+        payment_id = data_object.get("id")  # ID do pagamento
 
-        if not payment_id or not status or not external_reference:
+        # Validação básica
+        if not notification_id or not notification_type or not payment_id:
             return jsonify({"success": False, "message": "Dados incompletos na notificação"}), 400
 
-        # Decodifica o external_reference assumindo que ele é um JSON string
-        try:
-            external_data = json.loads(external_reference)
-            mac_address = external_data.get('mac')  # Obtém o MAC Address
-            duration = external_data.get('duration')  # Obtém a duração
-        except (ValueError, TypeError):
-            # Caso o external_reference não seja JSON, trate como string simples
-            print("Formato inválido em external_reference:", external_reference)
-            mac_address, duration = None, None
-
-        if not mac_address or not duration:
-            return jsonify({"success": False, "message": "Dados incompletos em external_reference"}), 400
-
-        # Processa a notificação com base no status
-        if status == 'approved':
-            print(f"Pagamento aprovado! ID: {payment_id}, MAC: {mac_address}, Duração: {duration}")
-            # Adiciona o MAC ao IP Binding com a duração especificada
-            add_mac_to_ip_binding(mac_address, duration)
-        elif status == 'pending':
-            print(f"Pagamento pendente. ID: {payment_id}, MAC: {mac_address}, Duração: {duration}")
-            # Lógica para pagamentos pendentes (opcional)
-        elif status == 'rejected':
-            print(f"Pagamento rejeitado. ID: {payment_id}, MAC: {mac_address}, Duração: {duration}")
-            # Lógica para pagamentos rejeitados (opcional)
+        # Lógica para tratar a notificação
+        if notification_type == "payment" and action == "payment.created":
+            print(f"Pagamento criado! ID: {payment_id}, Live Mode: {live_mode}")
+            # Aqui você pode adicionar a lógica para processar o pagamento, como verificar o status via API
         else:
-            print(f"Status desconhecido: {status}. ID: {payment_id}, Referência: {external_reference}")
+            print(f"Notificação ignorada. Tipo: {notification_type}, Ação: {action}")
 
         # Responde ao Mercado Pago que a notificação foi processada
         return jsonify({"success": True, "message": "Notificação processada com sucesso"}), 200
@@ -69,6 +53,8 @@ def payment_notification():
     except Exception as e:
         print("Erro ao processar notificação:", str(e))
         return jsonify({"success": False, "message": "Erro ao processar notificação"}), 500
+
+
 
 
 # Conexão ao MikroTik
