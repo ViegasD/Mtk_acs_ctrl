@@ -1,14 +1,14 @@
 from flask import Flask, request, jsonify
 from librouteros import connect
 import threading, json
-
+import os
 app = Flask(__name__)
 
-# Configurações do MikroTik
-HOST = '192.168.88.1'  # IP do roteador MikroTik
-USERNAME = 'admin'     # Usuário da API
-PASSWORD = 'admin'     # Senha do usuário da API
-PORT = 8728            # Porta da API do MikroTik
+# Configurações do MikroTik a partir de variáveis de ambiente
+HOST = os.getenv('HOST')  # IP do roteador MikroTik
+USERNAME = os.getenv('USERNAME')  # Usuário da API
+PASSWORD = os.getenv('PASSWORD')  # Senha do usuário da API
+PORT = int(os.getenv('PORT'))        # Porta da API do MikroTik
 
 # Endpoint para receber notificações do Mercado Pago
 @app.route('/payment-notification', methods=['POST'])
@@ -33,6 +33,7 @@ def payment_notification():
         # Decodifica o external_reference assumindo que ele é um JSON string
         try:
             external_data = json.loads(external_reference)
+            
             mac_address = external_data.get('mac')  # Obtém o MAC Address
             duration = external_data.get('duration')  # Obtém a duração
         except (ValueError, TypeError):

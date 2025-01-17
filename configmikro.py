@@ -1,10 +1,10 @@
 from librouteros import connect
-
-# Configurações do MikroTik
-HOST = '192.168.88.1'  # IP do roteador MikroTik
-USERNAME = 'admin'     # Usuário da API
-PASSWORD = 'admin'     # Senha do usuário da API
-PORT = 8728            # Porta da API do MikroTik
+import os
+# Configurações do MikroTik a partir de variáveis de ambiente
+HOST = os.getenv('HOST', '192.168.88.1')  # IP do roteador MikroTik
+USERNAME = os.getenv('USERNAME', 'admin')  # Usuário da API
+PASSWORD = os.getenv('PASSWORD', 'admin')  # Senha do usuário da API
+PORT = int(os.getenv('PORT', 8728))        # Porta da API do MikroTik
 
 # Função para configurar regras de firewall
 def configure_firewall(site_compra_ip):
