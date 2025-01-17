@@ -14,13 +14,19 @@ PORT = int(os.getenv('PORT'))        # Porta da API do MikroTik
 @app.route('/payment-notification', methods=['POST'])
 def payment_notification():
     try:
-        # Obtém os dados enviados pelo Mercado Pago
-        data = request.json
+        # Determina o tipo de conteúdo recebido
+        if request.content_type == 'application/json':
+            data = request.json
+        else:
+            data = request.form.to_dict()
+
+        # Verifica se os dados foram enviados
         if not data:
             return jsonify({"success": False, "message": "Nenhum dado enviado"}), 400
 
-        # Log dos dados recebidos (opcional, para depuração)
-        print("Notificação recebida do Mercado Pago:", data)
+        # Log dos headers e dados recebidos (para depuração)
+        print("Headers recebidos:", request.headers)
+        print("Dados recebidos:", data)
 
         # Extração dos dados importantes
         payment_id = data.get('id')  # ID do pagamento
@@ -33,11 +39,12 @@ def payment_notification():
         # Decodifica o external_reference assumindo que ele é um JSON string
         try:
             external_data = json.loads(external_reference)
-            
             mac_address = external_data.get('mac')  # Obtém o MAC Address
             duration = external_data.get('duration')  # Obtém a duração
         except (ValueError, TypeError):
-            return jsonify({"success": False, "message": "Formato inválido em external_reference"}), 400
+            # Caso o external_reference não seja JSON, trate como string simples
+            print("Formato inválido em external_reference:", external_reference)
+            mac_address, duration = None, None
 
         if not mac_address or not duration:
             return jsonify({"success": False, "message": "Dados incompletos em external_reference"}), 400
