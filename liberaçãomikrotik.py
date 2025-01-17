@@ -14,38 +14,39 @@ PORT = int(os.getenv('PORT'))        # Porta da API do MikroTik
 @app.route('/payment-notification', methods=['POST'])
 def payment_notification():
     try:
-        # Determina o tipo de conteúdo recebido
-        if request.content_type == 'application/json':
-            data = request.json
-        else:
-            data = request.form.to_dict()
+        # Log para verificar o endpoint foi acessado
+        print("Endpoint acessado pelo Mercado Pago!")
 
-        # Verifica se os dados foram enviados
+        # Verifica o conteúdo enviado pelo Mercado Pago
+        if request.content_type == 'application/json':
+            data = request.json  # Tenta extrair o JSON diretamente
+            print("JSON recebido:", data)
+        else:
+            return jsonify({"success": False, "message": "Conteúdo inválido"}), 400
+
+        # Verifica se os dados foram enviados corretamente
         if not data:
+            print("Nenhum dado recebido na notificação.")
             return jsonify({"success": False, "message": "Nenhum dado enviado"}), 400
 
-        # Log dos headers e dados recebidos (para depuração)
-        print("Headers recebidos:", request.headers)
-        print("Dados recebidos:", data)
+        # Extração de informações da notificação
+        action = data.get("action")  # Ação realizada (ex: payment.updated)
+        notification_type = data.get("type")  # Tipo da notificação (ex: payment)
+        payment_id = data.get("data", {}).get("id")  # ID do pagamento
 
-        # Extração dos dados importantes
-        notification_id = data.get("id")  # ID da notificação
-        live_mode = data.get("live_mode")  # Ambiente (produção ou sandbox)
-        notification_type = data.get("type")  # Tipo da notificação
-        action = data.get("action")  # Ação realizada
-        data_object = data.get("data", {})  # Objeto data
-        payment_id = data_object.get("id")  # ID do pagamento
+        # Logs para depuração
+        print(f"Ação: {action}, Tipo: {notification_type}, ID do pagamento: {payment_id}")
 
-        # Validação básica
-        if not notification_id or not notification_type or not payment_id:
-            return jsonify({"success": False, "message": "Dados incompletos na notificação"}), 400
+        # Validação dos dados extraídos
+        if not action or not notification_type or not payment_id:
+            print("Dados incompletos recebidos.")
+            return jsonify({"success": False, "message": "Dados incompletos"}), 400
 
-        # Lógica para tratar a notificação
-        if notification_type == "payment" and action == "payment.created":
-            print(f"Pagamento criado! ID: {payment_id}, Live Mode: {live_mode}")
-            # Aqui você pode adicionar a lógica para processar o pagamento, como verificar o status via API
+        # Processamento da notificação
+        if notification_type == "payment" and action == "payment.updated":
+            print(f"Pagamento atualizado! ID: {payment_id}")
         else:
-            print(f"Notificação ignorada. Tipo: {notification_type}, Ação: {action}")
+            print(f"Notificação não tratada. Tipo: {notification_type}, Ação: {action}")
 
         # Responde ao Mercado Pago que a notificação foi processada
         return jsonify({"success": True, "message": "Notificação processada com sucesso"}), 200
